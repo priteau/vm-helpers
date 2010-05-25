@@ -1,0 +1,186 @@
+#!/bin/sh
+# vm-run-simple - create a VM from the command line
+
+#CONFIGURABLE DEFAULTS
+DEFAULTCLOUD=calliopex.phys.uvic.ca
+DEFAULTNETWORK=private
+DEFAULTRAM=512
+DEFAULTARCH=x86
+DEFAULTIMAGE=http://vmrepo.phys.uvic.ca/vms/sl54base_i386.img.gz
+DEFAULTATTACH=sda
+
+
+SCRIPT=`basename $0`
+DATESTAMP=`date +%s`
+NIMBUSFILE=/tmp/nimbus.${DATESTAMP}.xml
+DEPLOYMENTFILE=/tmp/nimbus.deployment.${DATESTAMP}.xml
+EPRFILE=./nimbus.${DATESTAMP}.epr
+
+USAGE="Usage:
+`basename $0` [-p|--cpus n] [-a|--arch x86|x86_64] [-i|--image http://host/imagename.img.gz] [-d|--disk-attach-point sda] [-s|--sshpub path/to/sshpubkey] [-n|--network private|public] [-c|--cloud hostname.of.cloud.cluster] [-r|--ram raminmb] [-h|--help]"
+
+# Parse command line arguments
+while [ "$1" != "" ]; do
+    case $1 in
+        -i | --image )          shift
+                                image=$1
+                                ;;
+        -d | --disk-attach-point ) shift
+                                attach=$1
+                                ;;
+        -s | --sshpub )         shift
+                                sshpub=$1
+                                ;;
+        -n | --network )        shift
+                                network=$1
+                                ;;
+        -r | --ram )            shift
+                                ram=$1
+                                ;;
+        -p | --cpus )           shift
+                                cpus=$1
+                                ;;
+        -a | --arch )            shift
+                                arch=$1
+                                ;;
+        -c | --cloud )          shift
+                                cloud=$1
+                                ;;
+        -q | --request )        shift
+                                request=$1
+                                ;;
+        -h | --help )           echo $USAGE
+                                exit
+                                ;;
+        * )                     echo $USAGE
+                                exit 1
+    esac
+    shift
+done
+
+# Set defaults
+[ "$cloud" ] || cloud=$DEFAULTCLOUD
+[ "$ram" ] || ram=$DEFAULTRAM
+[ "$arch" ] || arch=$DEFAULTARCH
+[ "$cpus" ] || cpus=1
+[ "$image" ] || image=$DEFAULTIMAGE
+[ "$attach" ] || attach=$DEFAULTATTACH
+[ "$network" ] || network=$DEFAULTNETWORK
+
+# Prepare ssh pub key
+if [ ${sshpub} ]; then
+    sshpub="--sshfile ${sshpub}"
+fi
+
+# Write XML File
+NIMBUSXML="<?xml version='1.0' encoding='UTF-8'?>
+<VirtualWorkspace
+    xmlns='http://www.globus.org/2008/06/workspace/metadata'
+    xmlns:def='http://www.globus.org/2008/06/workspace/metadata/definition'
+    xmlns:log='http://www.globus.org/2008/06/workspace/metadata/logistics'
+    xmlns:jsdl='http://schemas.ggf.org/jsdl/2005/11/jsdl'
+    xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' >
+
+    <!-- name is an arbitrary URI -->
+    <name>http://${cloud}/`basename ${image}`</name>
+
+    <log:logistics>
+        <log:networking>
+            <log:nic>
+                <log:name>eth0</log:name>
+                <log:ipConfig>
+                    <log:acquisitionMethod>AllocateAndConfigure</log:acquisitionMethod>
+                </log:ipConfig>
+
+                <!--
+                The association string allows you to associate the NIC with
+                specific networking contexts (a common example is a string
+                which resolves to which network to bridge the virtual NIC
+                to; a simple scheme would be 'public' vs. 'private'.
+                Another example is VPN).  A site will advertise the
+                available assocations in the workspace factory resource
+                properties (to query with the sample client, use the
+                factoryrp option).
+                -->
+                <log:association>${network}</log:association>
+            </log:nic>
+        </log:networking>
+    </log:logistics>
+
+    <def:definition>
+        <def:requirements>
+            <jsdl:CPUArchitecture>
+                <jsdl:CPUArchitectureName>${arch}</jsdl:CPUArchitectureName>
+            </jsdl:CPUArchitecture>
+            <def:VMM>
+                <def:type>Xen</def:type>
+                <def:version>3</def:version>
+            </def:VMM>
+        </def:requirements>
+        <def:diskCollection>
+            <def:rootVBD>
+                <!--
+                Relative path names like in this example will be resolved
+                relative to the deployment node's local image repository
+                -->
+                <def:location>${image}</def:location>
+                <def:mountAs>${attach}</def:mountAs>
+                <def:permissions>ReadWrite</def:permissions>
+            </def:rootVBD>
+            <!--<def:blankspacePartition>
+                <def:partitionName>blankdisk1</def:partitionName>
+                <def:mountAs>sda2</def:mountAs>
+            </def:blankspacePartition>-->
+        </def:diskCollection>
+    </def:definition>
+</VirtualWorkspace>"
+echo "$NIMBUSXML" > $NIMBUSFILE
+
+NIMBUSDEPLOYMENT="<?xml version='1.0' encoding='UTF-8'?>
+<WorkspaceDeployment
+    xmlns='http://www.globus.org/2008/06/workspace/negotiable'
+    xmlns:jsdl='http://schemas.ggf.org/jsdl/2005/11/jsdl'
+    xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' >
+
+    <DeploymentTime>
+        <!-- xsd:duration syntax. This example == 30 minutes -->
+        <minDuration>PT8H</minDuration>
+    </DeploymentTime>
+    <InitialState>Running</InitialState>
+    <ShutdownMechanism>Trash</ShutdownMechanism>
+    <ResourceAllocation>
+        <jsdl:IndividualPhysicalMemory>
+            <jsdl:Exact>${ram}</jsdl:Exact>
+        </jsdl:IndividualPhysicalMemory>
+        <!--<jsdl:IndividualCPUCount>
+            <jsdl:Exact>${cpus}</jsdl:Exact>
+        </jsdl:IndividualCPUCount>-->
+        <!--<Storage>
+            <entry>
+                <partitionName>blankdisk1</partitionName>
+                <jsdl:IndividualDiskSpace>
+                    <jsdl:Exact>102400</jsdl:Exact>
+                </jsdl:IndividualDiskSpace>
+            </entry>
+        </Storage>-->
+    </ResourceAllocation>
+    <NodeNumber>1</NodeNumber>
+    <ShutdownMechanism>Trash</ShutdownMechanism>
+
+</WorkspaceDeployment>"
+echo "$NIMBUSDEPLOYMENT" > $DEPLOYMENTFILE
+
+#Boot machine
+$GLOBUS_LOCATION/bin/workspace \
+    -z host \
+    --poll-delay 200 \
+    --file ${EPRFILE} \
+    --deploy-duration 10 \
+    --deploy \
+    --request ${DEPLOYMENTFILE} \
+    --metadata ${NIMBUSFILE} \
+    -s https://${cloud}:8443/wsrf/services/WorkspaceFactoryService \
+    --exit-state Running \
+    ${sshpub}
+#rm ${NIMBUSFILE}
+#rm ${DEPLOYMENTFILE}

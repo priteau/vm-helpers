@@ -1,0 +1,2 @@
+#!/bin/sh
+./killepr `ls -t | grep epr | head -n1`

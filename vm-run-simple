@@ -1,12 +1,14 @@
 #!/bin/sh
 # vm-run-simple - create a VM from the command line
 
+WORKSPACE=workspace #location of workspace.sh executable.
+
 #CONFIGURABLE DEFAULTS
 DEFAULTCLOUD=calliopex.phys.uvic.ca
 DEFAULTNETWORK=private
 DEFAULTRAM=512
 DEFAULTARCH=x86
-DEFAULTIMAGE=http://vmrepo.phys.uvic.ca/vms/sl54base_i386.img.gz
+DEFAULTIMAGE=http://vmrepo.phys.uvic.ca/vms/sl53base_i386.ext3.gz
 DEFAULTATTACH=sda
 
 
@@ -171,7 +173,7 @@ NIMBUSDEPLOYMENT="<?xml version='1.0' encoding='UTF-8'?>
 echo "$NIMBUSDEPLOYMENT" > $DEPLOYMENTFILE
 
 #Boot machine
-$GLOBUS_LOCATION/bin/workspace \
+$WORKSPACE \
     -z host \
     --poll-delay 200 \
     --file ${EPRFILE} \

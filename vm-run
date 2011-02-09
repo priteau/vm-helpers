@@ -22,7 +22,20 @@ OPTIONALFILE=/tmp/nimbus.optional.${DATESTAMP}.xml
 EPRFILE=./nimbus.${DATESTAMP}.epr
 
 USAGE="Usage:
-`basename $0` [-p|--cpus n] [-a|--arch x86|x86_64] [-i|--image http://host/imagename.img.gz] [-d|--disk-attach-point sda] [-s|--sshpub path/to/sshpubkey] [-n|--network private|public] [-c|--cloud hostname.of.cloud.cluster] [-r|--ram raminmb] [-h|--help]"
+`basename $0` 
+[-i|--image http://host/imagename.img.gz]
+[-d|--disk-attach-point sda]
+[-s|--sshpub path/to/sshpubkey]
+[-u|--userproxy path/to/userproxy]
+[-t|--http-prop-cred path/to/credential]
+[-n|--network private|public]
+[-r|--ram raminMB]
+[-p|--cpus n]
+[-b|--blank-space spaceinMB]
+[-a|--arch x86|x86_64]
+[-c|--cloud hostname.of.cloud.cluster]
+[-l|--lifetime n]
+[-h|--help]"
 
 # Parse command line arguments
 while [ "$1" != "" ]; do
@@ -62,9 +75,6 @@ while [ "$1" != "" ]; do
                                 ;;
         -l | --lifetime )       shift
                                 lifetime=$1
-                                ;;
-        -q | --request )        shift
-                                request=$1
                                 ;;
         -h | --help )           echo $USAGE
                                 exit
@@ -230,5 +240,6 @@ $WORKSPACE \
     -s https://${cloud}:8443/wsrf/services/WorkspaceFactoryService \
     --exit-state Running \
     -o $OPTIONALFILE
-#rm ${NIMBUSFILE}
-#rm ${DEPLOYMENTFILE}
+rm ${NIMBUSFILE}
+rm ${OPTIONALFILE}
+rm ${DEPLOYMENTFILE}

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # vm-run-simple - create a VM from the command line
 
 WORKSPACE=workspace #location of workspace.sh executable.
@@ -7,15 +7,18 @@ WORKSPACE=workspace #location of workspace.sh executable.
 DEFAULTCLOUD=calliopex.phys.uvic.ca
 DEFAULTNETWORK=private
 DEFAULTRAM=512
+DEFAULTCPUS=1
+DEFAULTBLANKSPACE=1
 DEFAULTARCH=x86
 DEFAULTIMAGE=http://vmrepo.phys.uvic.ca/vms/sl53base_i386.ext3.gz
 DEFAULTATTACH=sda
-
+DEFAULTLIFETIME=500
 
 SCRIPT=`basename $0`
 DATESTAMP=`date +%s`
 NIMBUSFILE=/tmp/nimbus.${DATESTAMP}.xml
 DEPLOYMENTFILE=/tmp/nimbus.deployment.${DATESTAMP}.xml
+OPTIONALFILE=/tmp/nimbus.optional.${DATESTAMP}.xml
 EPRFILE=./nimbus.${DATESTAMP}.epr
 
 USAGE="Usage:
@@ -33,6 +36,12 @@ while [ "$1" != "" ]; do
         -s | --sshpub )         shift
                                 sshpub=$1
                                 ;;
+        -u | --userproxy )      shift
+                                userproxy=$1
+                                ;;
+        -t | --http-prop-cred ) shift
+                                httppropagationcred=$1
+                                ;;
         -n | --network )        shift
                                 network=$1
                                 ;;
@@ -42,11 +51,17 @@ while [ "$1" != "" ]; do
         -p | --cpus )           shift
                                 cpus=$1
                                 ;;
+        -b | --blank-space )    shift
+                                blankspace=$1
+                                ;;
         -a | --arch )            shift
                                 arch=$1
                                 ;;
         -c | --cloud )          shift
                                 cloud=$1
+                                ;;
+        -l | --lifetime )       shift
+                                lifetime=$1
                                 ;;
         -q | --request )        shift
                                 request=$1
@@ -64,15 +79,46 @@ done
 [ "$cloud" ] || cloud=$DEFAULTCLOUD
 [ "$ram" ] || ram=$DEFAULTRAM
 [ "$arch" ] || arch=$DEFAULTARCH
-[ "$cpus" ] || cpus=1
+[ "$cpus" ] || cpus=$DEFAULTCPUS
+[ "$blankspace" ] || blankspace=$DEFAULTBLANKSPACE
 [ "$image" ] || image=$DEFAULTIMAGE
 [ "$attach" ] || attach=$DEFAULTATTACH
 [ "$network" ] || network=$DEFAULTNETWORK
+[ "$lifetime" ] || lifetime=$DEFAULTLIFETIME
 
-# Prepare ssh pub key
-if [ ${sshpub} ]; then
-    sshpub="--sshfile ${sshpub}"
+if [ $attach == "sda" ]; then
+    blankattach="sdb"
+elif [ $attach == "sda1" ]; then
+    blankattach="sda2"
+else
+    echo "I don't know about attach point '$attach'. Guessing 'sdb'." >&2
+    blankattach="sdb"
 fi
+
+optional_contents=""
+# Build Optional File
+if [ ${sshpub} ]; then
+    optional_contents="$optional_contents
+<filewrite>
+  <content>$(cat $sshpub)</content>
+  <pathOnVM>/root/.ssh/authorized_keys</pathOnVM>
+</filewrite>"
+fi
+
+if [ ${userproxy} ]; then
+    optional_contents="$optional_contents
+<filewrite>
+  <content>$(cat $userproxy)</content>
+  <pathOnVM>/tmp/x509up_u0</pathOnVM>
+</filewrite>"
+fi
+
+if [ ${httppropagationcred} ]; then
+    optional_contents="$optional_contents
+<credentialToCopy>$(cat $userproxy)</credentialToCopy>"
+fi
+OPTIONALXML="<OptionalParameters>${optional_contents}</OptionalParameters>"
+echo "$OPTIONALXML" > $OPTIONALFILE
 
 # Write XML File
 NIMBUSXML="<?xml version='1.0' encoding='UTF-8'?>
@@ -129,10 +175,10 @@ NIMBUSXML="<?xml version='1.0' encoding='UTF-8'?>
                 <def:mountAs>${attach}</def:mountAs>
                 <def:permissions>ReadWrite</def:permissions>
             </def:rootVBD>
-            <!--<def:blankspacePartition>
+            <def:blankspacePartition>
                 <def:partitionName>blankdisk1</def:partitionName>
-                <def:mountAs>sda2</def:mountAs>
-            </def:blankspacePartition>-->
+                <def:mountAs>${blankattach}</def:mountAs>
+            </def:blankspacePartition>
         </def:diskCollection>
     </def:definition>
 </VirtualWorkspace>"
@@ -157,14 +203,14 @@ NIMBUSDEPLOYMENT="<?xml version='1.0' encoding='UTF-8'?>
         <jsdl:IndividualCPUCount>
             <jsdl:Exact>${cpus}</jsdl:Exact>
         </jsdl:IndividualCPUCount>
-        <!--<Storage>
+        <Storage>
             <entry>
                 <partitionName>blankdisk1</partitionName>
                 <jsdl:IndividualDiskSpace>
-                    <jsdl:Exact>102400</jsdl:Exact>
+                    <jsdl:Exact>${blankspace}</jsdl:Exact>
                 </jsdl:IndividualDiskSpace>
             </entry>
-        </Storage>-->
+        </Storage>
     </ResourceAllocation>
     <NodeNumber>1</NodeNumber>
     <ShutdownMechanism>Trash</ShutdownMechanism>
@@ -177,12 +223,12 @@ $WORKSPACE \
     -z host \
     --poll-delay 200 \
     --file ${EPRFILE} \
-    --deploy-duration 10 \
+    --deploy-duration $lifetime \
     --deploy \
     --request ${DEPLOYMENTFILE} \
     --metadata ${NIMBUSFILE} \
     -s https://${cloud}:8443/wsrf/services/WorkspaceFactoryService \
     --exit-state Running \
-    ${sshpub}
+    -o $OPTIONALFILE
 #rm ${NIMBUSFILE}
 #rm ${DEPLOYMENTFILE}

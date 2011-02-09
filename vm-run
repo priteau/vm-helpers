@@ -154,9 +154,9 @@ NIMBUSDEPLOYMENT="<?xml version='1.0' encoding='UTF-8'?>
         <jsdl:IndividualPhysicalMemory>
             <jsdl:Exact>${ram}</jsdl:Exact>
         </jsdl:IndividualPhysicalMemory>
-        <!--<jsdl:IndividualCPUCount>
+        <jsdl:IndividualCPUCount>
             <jsdl:Exact>${cpus}</jsdl:Exact>
-        </jsdl:IndividualCPUCount>-->
+        </jsdl:IndividualCPUCount>
         <!--<Storage>
             <entry>
                 <partitionName>blankdisk1</partitionName>

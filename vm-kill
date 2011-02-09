@@ -13,14 +13,17 @@ fi
 HOST=$1
 ID=$2
 
+DATESTAMP=`date +%s` 
+EPRFILE=/tmp/nimbus.${DATESTAMP}.epr
+
 echo "<WORKSPACE_EPR xsi:type=\"ns1:EndpointReferenceType\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ns1=\"http://schemas.xmlsoap.org/ws/2004/03/addressing\">
  <ns1:Address xsi:type=\"ns1:AttributedURI\">https://$HOST:8443/wsrf/services/WorkspaceService</ns1:Address>
  <ns1:ReferenceProperties xsi:type=\"ns1:ReferencePropertiesType\">
   <ns2:WorkspaceKey xmlns:ns2=\"http://www.globus.org/2008/06/workspace\">$ID</ns2:WorkspaceKey>
  </ns1:ReferenceProperties>
  <ns1:ReferenceParameters xsi:type=\"ns1:ReferenceParametersType\"/>
-</WORKSPACE_EPR>" > killer.tmp
-$WORKSPACE -e killer.tmp --shutdown
-sleep 3
-$WORKSPACE -e killer.tmp --destroy
-rm killer.tmp
+</WORKSPACE_EPR>" > $EPRFILE
+$WORKSPACE -e $EPRFILE --shutdown
+test $? && echo "Sleeping 8 seconds to wait for shutdown" && sleep 8
+$WORKSPACE -e $EPRFILE --destroy
+rm $EPRFILE

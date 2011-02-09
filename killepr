@@ -1,8 +1,0 @@
-#!/bin/sh
-
-echo Waiting for Shutdown...
-workspace -e $1 --shutdown
-sleep 8
-echo Sending destroy...
-workspace -e $1 --destroy
-rm $1

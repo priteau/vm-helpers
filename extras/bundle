@@ -1,0 +1,26 @@
+#!/bin/bash
+# little script to bundle cloud client and vm-helpers together into a
+# nice tarball
+
+DIRECTORY=$(cd `dirname $0` && pwd)
+DIRECTORY="${DIRECTORY}/../"
+CLOUD_CLIENT_TARBALL_URL="http://www.nimbusproject.org/downloads/nimbus-cloud-client-017.tar.gz"
+
+TEMPDIR=`mktemp -d /tmp/tempXXXXXX`
+cd $TEMPDIR
+wget -q $CLOUD_CLIENT_TARBALL_URL
+TARBALL=`basename $CLOUD_CLIENT_TARBALL_URL`
+tar xzf $TARBALL
+CLOUD_CLIENT_DIR=`echo $TARBALL | sed 's/\.tar\.gz//'`
+chmod +x $CLOUD_CLIENT_DIR/lib/workspace.sh
+cd $CLOUD_CLIENT_DIR/bin/
+cp $DIRECTORY/vm-* .
+cd $TEMPDIR
+BUNDLED_CLOUD_CLIENT_DIR="${CLOUD_CLIENT_DIR}-plus-extras"
+mv ${CLOUD_CLIENT_DIR} ${BUNDLED_CLOUD_CLIENT_DIR}
+NEWTARBALL="${BUNDLED_CLOUD_CLIENT_DIR}.tar.gz"
+tar czf $NEWTARBALL ${BUNDLED_CLOUD_CLIENT_DIR}
+cp $NEWTARBALL $DIRECTORY/
+rm -Rf $TEMPDIR
+cd ${DIRECTORY}
+echo New bundled tarball at `pwd`/${NEWTARBALL}

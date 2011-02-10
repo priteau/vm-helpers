@@ -23,7 +23,7 @@ DATESTAMP=`date +%s`
 NIMBUSFILE=/tmp/nimbus.${DATESTAMP}.xml
 DEPLOYMENTFILE=/tmp/nimbus.deployment.${DATESTAMP}.xml
 OPTIONALFILE=/tmp/nimbus.optional.${DATESTAMP}.xml
-EPRFILE=./nimbus.${DATESTAMP}.epr
+EPRFILE=/tmp/nimbus.${DATESTAMP}.epr
 
 USAGE="Usage:
 `basename $0` 
@@ -247,3 +247,4 @@ $WORKSPACE \
 rm ${NIMBUSFILE}
 rm ${OPTIONALFILE}
 rm ${DEPLOYMENTFILE}
+rm ${EPRFILE}

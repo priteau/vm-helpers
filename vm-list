@@ -1,8 +1,12 @@
 #!/bin/bash
 
-CLOUDCLIENT=cloud-client.sh # location of workspace.sh executable
+# By default, we assume this will be installed in the cloud-client
+# bin directory. If it isn't you'll want to point to your cloud-client
+# install here.
+CLOUDCLIENT=$(cd `dirname $0` && echo `pwd`/../bin/cloud-client.sh)
+#CLOUDCLIENT=/path/to/cloud-client.sh
 
-usage="$0 CLOUDHOSTNAME"
+usage="Usage: `basename $0` cloud.host.name"
 
 if [ $# -lt 1 ]; then
 

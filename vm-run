@@ -1,7 +1,11 @@
 #!/bin/bash
 # vm-run-simple - create a VM from the command line
 
-WORKSPACE=workspace #location of workspace.sh executable.
+# By default, we assume this will be installed in the cloud-client
+# bin directory. If it isn't you'll want to point to your cloud-client
+# install here.
+WORKSPACE=$(cd `dirname $0` && echo `pwd`/../lib/workspace.sh)
+#WORKSPACE=/path/to/workspace.sh
 
 #CONFIGURABLE DEFAULTS
 DEFAULTCLOUD=calliopex.phys.uvic.ca

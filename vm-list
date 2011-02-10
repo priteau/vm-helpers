@@ -1,0 +1,23 @@
+#!/bin/bash
+
+CLOUDCLIENT=cloud-client.sh # location of workspace.sh executable
+
+usage="$0 CLOUDHOSTNAME"
+
+if [ $# -lt 1 ]; then
+
+    echo $usage
+    exit 1
+fi
+
+HOST=$1
+
+DATESTAMP=`date +%s` 
+
+CONFFILE=/tmp/vm-list.${DATESTAMP}.conf
+
+echo "
+vws.factory=${HOST}:8443
+" > $CONFFILE
+$CLOUDCLIENT --conf $CONFFILE --status
+rm $CONFFILE

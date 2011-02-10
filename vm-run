@@ -241,7 +241,7 @@ $WORKSPACE \
     --deploy \
     --request ${DEPLOYMENTFILE} \
     --metadata ${NIMBUSFILE} \
-    -s https://${cloud}:8443/wsrf/services/WorkspaceFactoryService \
+    -s https://${cloud}/wsrf/services/WorkspaceFactoryService \
     --exit-state Running \
     -o $OPTIONALFILE
 rm ${NIMBUSFILE}

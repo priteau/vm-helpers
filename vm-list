@@ -21,7 +21,7 @@ DATESTAMP=`date +%s`
 CONFFILE=/tmp/vm-list.${DATESTAMP}.conf
 
 echo "
-vws.factory=${HOST}:8443
+vws.factory=${HOST}
 " > $CONFFILE
 $CLOUDCLIENT --conf $CONFFILE --status
 rm $CONFFILE

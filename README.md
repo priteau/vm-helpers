@@ -8,7 +8,7 @@ Cloud Client tools.
 
 The easiest way to install the helpers is to simply get the pre-bundled Nimbus Cloud Client, which includes the helpers. Install this as you would any other Cloud Client installation. This is available at:
 
-https://github.com/downloads/hep-gc/vm-helpers/nimbus-cloud-client-017-plus-extras.tar.gz
+https://github.com/downloads/hep-gc/vm-helpers/nimbus-cloud-client-018-plus-extras.tar.gz
 
 ## Usage
 

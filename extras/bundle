@@ -4,11 +4,14 @@
 
 DIRECTORY=$(cd `dirname $0` && pwd)
 DIRECTORY="${DIRECTORY}/../"
-CLOUD_CLIENT_TARBALL_URL="http://www.nimbusproject.org/downloads/nimbus-cloud-client-017.tar.gz"
+CLOUD_CLIENT_TARBALL_URL="http://www.nimbusproject.org/downloads/nimbus-cloud-client-018.tar.gz"
 
 TEMPDIR=`mktemp -d /tmp/tempXXXXXX`
 cd $TEMPDIR
+echo -n "Getting Cloud Client tarball..." >&2
 wget -q $CLOUD_CLIENT_TARBALL_URL
+echo "done" >&2
+echo -n "Customizing Cloud Client tarball..." >&2
 TARBALL=`basename $CLOUD_CLIENT_TARBALL_URL`
 tar xzf $TARBALL
 CLOUD_CLIENT_DIR=`echo $TARBALL | sed 's/\.tar\.gz//'`
@@ -23,4 +26,5 @@ tar czf $NEWTARBALL ${BUNDLED_CLOUD_CLIENT_DIR}
 cp $NEWTARBALL $DIRECTORY/
 rm -Rf $TEMPDIR
 cd ${DIRECTORY}
+echo "done" >&2
 echo New bundled tarball at `pwd`/${NEWTARBALL}

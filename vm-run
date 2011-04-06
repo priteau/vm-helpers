@@ -17,6 +17,7 @@ DEFAULTARCH=x86
 DEFAULTIMAGE=http://vmrepo.phys.uvic.ca/vms/sl53base_i386.ext3.gz
 DEFAULTATTACH=sda
 DEFAULTLIFETIME=500
+DEFAULTSSHUSER=root
 
 SCRIPT=`basename $0`
 DATESTAMP=`date +%s`
@@ -30,6 +31,7 @@ USAGE="Usage:
 [-i|--image http://host/imagename.img.gz]
 [-d|--disk-attach-point sda]
 [-s|--sshpub path/to/sshpubkey]
+[-l|--sshuser username]
 [-u|--userproxy path/to/userproxy]
 [-t|--http-prop-cred path/to/credential]
 [-n|--network private|public]
@@ -38,7 +40,7 @@ USAGE="Usage:
 [-b|--blank-space spaceinMB]
 [-a|--arch x86|x86_64]
 [-c|--cloud hostname.of.cloud.cluster]
-[-l|--lifetime n]
+[-w|--lifetime n]
 [-h|--help]"
 
 # Parse command line arguments
@@ -52,6 +54,9 @@ while [ "$1" != "" ]; do
                                 ;;
         -s | --sshpub )         shift
                                 sshpub=$1
+                                ;;
+        -l | --sshuser )        shift
+                                sshuser=$1
                                 ;;
         -u | --userproxy )      shift
                                 userproxy=$1
@@ -77,7 +82,7 @@ while [ "$1" != "" ]; do
         -c | --cloud )          shift
                                 cloud=$1
                                 ;;
-        -l | --lifetime )       shift
+        -w | --lifetime )       shift
                                 lifetime=$1
                                 ;;
         -h | --help )           echo $USAGE
@@ -99,6 +104,7 @@ done
 [ "$attach" ] || attach=$DEFAULTATTACH
 [ "$network" ] || network=$DEFAULTNETWORK
 [ "$lifetime" ] || lifetime=$DEFAULTLIFETIME
+[ "$sshuser" ] || sshuser=$DEFAULTSSHUSER
 
 if [ $attach == "sda" ]; then
     blankattach="sdb"
@@ -111,11 +117,17 @@ fi
 
 optional_contents=""
 # Build Optional File
+if [ "${sshuser}" = "root" ] ; then
+    SSHPATH="/root/.ssh/authorized_keys"
+else
+    SSHPATH="/home/${sshuser}/.ssh/authorized_keys"
+fi
+
 if [ ${sshpub} ]; then
     optional_contents="$optional_contents
 <filewrite>
   <content>$(cat $sshpub)</content>
-  <pathOnVM>/root/.ssh/authorized_keys</pathOnVM>
+  <pathOnVM>${SSHPATH}</pathOnVM>
 </filewrite>"
 fi
 

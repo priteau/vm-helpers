@@ -14,10 +14,11 @@ DEFAULTRAM=512
 DEFAULTCPUS=1
 DEFAULTBLANKSPACE=1
 DEFAULTARCH=x86
-DEFAULTIMAGE=http://vmrepo.phys.uvic.ca/vms/sl53base_i386.ext3.gz
+DEFAULTIMAGE=http://vmrepo.phys.uvic.ca/vms/sl54base_i386.img.gz
 DEFAULTATTACH=sda
 DEFAULTLIFETIME=500
 DEFAULTSSHUSER=root
+#DEFAULTAUTHZKEYS=/root/.ssh/authorized_keys
 
 SCRIPT=`basename $0`
 DATESTAMP=`date +%s`
@@ -32,6 +33,7 @@ USAGE="Usage:
 [-d|--disk-attach-point sda]
 [-s|--sshpub path/to/sshpubkey]
 [-l|--sshuser username]
+[-z|--authorized-keys-on-vm path/to/authz-keys]
 [-u|--userproxy path/to/userproxy]
 [-t|--http-prop-cred path/to/credential]
 [-n|--network private|public]
@@ -57,6 +59,9 @@ while [ "$1" != "" ]; do
                                 ;;
         -l | --sshuser )        shift
                                 sshuser=$1
+                                ;;
+        -z | --authorized-keys-on-vm )        shift
+                                authzkeys=$1
                                 ;;
         -u | --userproxy )      shift
                                 userproxy=$1
@@ -105,6 +110,7 @@ done
 [ "$network" ] || network=$DEFAULTNETWORK
 [ "$lifetime" ] || lifetime=$DEFAULTLIFETIME
 [ "$sshuser" ] || sshuser=$DEFAULTSSHUSER
+[ "$authzkeys" ] || [ "$DEFAULTAUTHZKEYS" ] || authzkeys=$DEFAULTAUTHZKEYS
 
 if [ $attach == "sda" ]; then
     blankattach="sdb"
@@ -117,7 +123,9 @@ fi
 
 optional_contents=""
 # Build Optional File
-if [ "${sshuser}" = "root" ] ; then
+if [ "${authzkeys}" ] ; then
+    SSHPATH="$authzkeys"
+elif [ "${sshuser}" = "root" ] ; then
     SSHPATH="/root/.ssh/authorized_keys"
 else
     SSHPATH="/home/${sshuser}/.ssh/authorized_keys"

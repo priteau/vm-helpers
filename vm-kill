@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DEFAULTCLOUD=alto.cloud.nrc.ca
+DEFAULTCLOUD=example.cloud
 
 # By default, we assume this will be installed in the cloud-client
 # bin directory. If it isn't you'll want to point to your cloud-client
@@ -10,8 +10,7 @@ WORKSPACE=$(cd `dirname $0` && echo `pwd`/../lib/workspace.sh)
 
 usage="Usage: `basename $0` cloud.host.name VMID"
 
-if [ $# -lt 1 ]; then
-
+if [ $# -lt 1 ] || [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     echo $usage
     exit 1
 elif [ $# -lt 2 ]; then

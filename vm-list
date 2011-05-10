@@ -1,5 +1,7 @@
 #!/bin/bash
 
+DEFAULTCLOUD=alto.cloud.nrc.ca
+
 # By default, we assume this will be installed in the cloud-client
 # bin directory. If it isn't you'll want to point to your cloud-client
 # install here.
@@ -8,13 +10,12 @@ CLOUDCLIENT=$(cd `dirname $0` && echo `pwd`/../bin/cloud-client.sh)
 
 usage="Usage: `basename $0` cloud.host.name"
 
-if [ $# -lt 2 ] || [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
-
-    echo $usage
-    exit 1
+if [ $# -lt 1 ]; then
+    HOST=$DEFAULTCLOUD
+else
+	HOST=$1
 fi
 
-HOST=$1
 
 DATESTAMP=`date +%s` 
 

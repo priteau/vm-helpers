@@ -1,5 +1,7 @@
 #!/bin/bash
 
+DEFAULTCLOUD=alto.cloud.nrc.ca
+
 # By default, we assume this will be installed in the cloud-client
 # bin directory. If it isn't you'll want to point to your cloud-client
 # install here.
@@ -8,14 +10,18 @@ WORKSPACE=$(cd `dirname $0` && echo `pwd`/../lib/workspace.sh)
 
 usage="Usage: `basename $0` cloud.host.name VMID"
 
-if [ $# -lt 2 ] || [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
+if [ $# -lt 1 ]; then
 
     echo $usage
     exit 1
+elif [ $# -lt 2 ]; then
+	HOST=$DEFAULTCLOUD
+	ID=$1
+else
+	HOST=$1
+	ID=$2
 fi
 
-HOST=$1
-ID=$2
 
 DATESTAMP=`date +%s` 
 EPRFILE=/tmp/nimbus.${DATESTAMP}.epr

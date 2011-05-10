@@ -4,22 +4,31 @@
 # By default, we assume this will be installed in the cloud-client
 # bin directory. If it isn't you'll want to point to your cloud-client
 # install here.
-WORKSPACE=$(cd `dirname $0` && echo `pwd`/../lib/workspace.sh)
-#WORKSPACE=/path/to/workspace.sh
+CLOUD_CLIENT_PATH=$(cd `dirname $0`/../ && echo `pwd -P`)
+WORKSPACE=$CLOUD_CLIENT_PATH/lib/workspace.sh
 
 #CONFIGURABLE DEFAULTS
-DEFAULTCLOUD=calliopex.phys.uvic.ca
-DEFAULTNETWORK=private
-DEFAULTRAM=512
-DEFAULTCPUS=1
-DEFAULTBLANKSPACE=1
-DEFAULTARCH=x86
-DEFAULTIMAGE=http://vmrepo.phys.uvic.ca/vms/sl54base_i386.img.gz
-DEFAULTATTACH=sda
-DEFAULTLIFETIME=500
-DEFAULTSSHUSER=root
-#DEFAULTAUTHZKEYS=/root/.ssh/authorized_keys
+CLOUD=example.com
+NETWORK=public
+RAM=1024
+CPUS=1
+BLANKSPACE=102400
+ARCH=x86
+IMAGE=http://example.com/vms/sl54base_i386.img.gz
+ATTACH=sda
+LIFETIME=2880
+SSHUSER=root
+#AUTHZKEYS=/root/.ssh/authorized_keys
 
+# If this file exists, it will override the settings set above
+CONFIG_PATH=$CLOUD_CLIENT_PATH/conf
+DEFAULT_CONFIG=$CONFIG_PATH/default.helperconf
+OTHER_CLOUD_CONFIGS=$CONFIG_PATH/clouds
+
+
+
+
+# SCRIPT BEGINS:
 SCRIPT=`basename $0`
 DATESTAMP=`date +%s`
 NIMBUSFILE=/tmp/nimbus.${DATESTAMP}.xml
@@ -28,7 +37,9 @@ OPTIONALFILE=/tmp/nimbus.optional.${DATESTAMP}.xml
 EPRFILE=/tmp/nimbus.${DATESTAMP}.epr
 
 USAGE="Usage:
-`basename $0` 
+`basename $0` [options]
+
+Options:
 [-i|--image http://host/imagename.img.gz]
 [-d|--disk-attach-point sda]
 [-s|--sshpub path/to/sshpubkey]
@@ -45,9 +56,21 @@ USAGE="Usage:
 [-w|--lifetime n]
 [-h|--help]"
 
+function list_clouds {
+
+	echo "Clouds available:"
+	for cloud_conf in `ls $OTHER_CLOUD_CONFIGS/*.helperconf` ; do
+		. $cloud_conf
+		echo "$CLOUD"
+	done
+}
+
 # Parse command line arguments
 while [ "$1" != "" ]; do
     case $1 in
+	list )                  list_clouds
+                                exit 0
+                                ;;
         -i | --image )          shift
                                 image=$1
                                 ;;
@@ -90,27 +113,37 @@ while [ "$1" != "" ]; do
         -w | --lifetime )       shift
                                 lifetime=$1
                                 ;;
-        -h | --help )           echo $USAGE
+        -h | --help )           echo "$USAGE"
                                 exit
                                 ;;
-        * )                     echo $USAGE
+        * )                     echo "$USAGE"
                                 exit 1
     esac
     shift
 done
 
+# Get overriding cloud configs
+if [ -n $cloud ] && [ -f "$OTHER_CLOUD_CONFIGS/$cloud.helperconf" ]; then
+	. $OTHER_CLOUD_CONFIGS/$cloud.helperconf
+elif [ -f "$DEFAULT_CONFIG" ] ; then
+	. $DEFAULT_CONFIG
+fi
+
+
 # Set defaults
-[ "$cloud" ] || cloud=$DEFAULTCLOUD
-[ "$ram" ] || ram=$DEFAULTRAM
-[ "$arch" ] || arch=$DEFAULTARCH
-[ "$cpus" ] || cpus=$DEFAULTCPUS
-[ "$blankspace" ] || blankspace=$DEFAULTBLANKSPACE
-[ "$image" ] || image=$DEFAULTIMAGE
-[ "$attach" ] || attach=$DEFAULTATTACH
-[ "$network" ] || network=$DEFAULTNETWORK
-[ "$lifetime" ] || lifetime=$DEFAULTLIFETIME
-[ "$sshuser" ] || sshuser=$DEFAULTSSHUSER
-[ "$authzkeys" ] || [ "$DEFAULTAUTHZKEYS" ] || authzkeys=$DEFAULTAUTHZKEYS
+[ "$cloud" ] || cloud=$CLOUD
+[ "$ram" ] || ram=$RAM
+[ "$arch" ] || arch=$ARCH
+[ "$cpus" ] || cpus=$CPUS
+[ "$blankspace" ] || blankspace=$BLANKSPACE
+[ "$image" ] || image=$IMAGE
+[ "$attach" ] || attach=$ATTACH
+[ "$network" ] || network=$NETWORK
+[ "$lifetime" ] || lifetime=$LIFETIME
+[ "$sshuser" ] || sshuser=$SSHUSER
+[ "$authzkeys" ] || [ "$AUTHZKEYS" ] || authzkeys=$AUTHZKEYS
+
+
 
 if [ $attach == "sda" ]; then
     blankattach="sdb"

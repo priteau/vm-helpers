@@ -149,7 +149,7 @@ fi
 
 if [ ${httppropagationcred} ]; then
     optional_contents="$optional_contents
-<credentialToCopy>$(cat $userproxy)</credentialToCopy>"
+<credentialToCopy>$(cat $httppropagationcred)</credentialToCopy>"
 fi
 OPTIONALXML="<OptionalParameters>${optional_contents}</OptionalParameters>"
 echo "$OPTIONALXML" > $OPTIONALFILE
@@ -264,7 +264,7 @@ $WORKSPACE \
     -s https://${cloud}/wsrf/services/WorkspaceFactoryService \
     --exit-state Running \
     -o $OPTIONALFILE
-rm ${NIMBUSFILE}
-rm ${OPTIONALFILE}
-rm ${DEPLOYMENTFILE}
-rm ${EPRFILE}
+rm -f ${NIMBUSFILE}
+rm -f ${OPTIONALFILE}
+rm -f ${DEPLOYMENTFILE}
+rm -f ${EPRFILE}

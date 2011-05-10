@@ -8,7 +8,7 @@ WORKSPACE=$(cd `dirname $0` && echo `pwd`/../lib/workspace.sh)
 
 usage="Usage: `basename $0` cloud.host.name VMID"
 
-if [ $# -lt 2 ]; then
+if [ $# -lt 2 ] || [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
 
     echo $usage
     exit 1

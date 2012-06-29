@@ -149,6 +149,10 @@ if [ $attach == "sda" ]; then
     blankattach="sdb"
 elif [ $attach == "sda1" ]; then
     blankattach="sda2"
+elif [ $attach == "hda" ]; then
+    blankattach="hdb"
+elif [ $attach == "hda1" ]; then
+    blankattach="hda2"
 else
     echo "I don't know about attach point '$attach'. Guessing 'sdb'." >&2
     blankattach="sdb"
